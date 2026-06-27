@@ -6,10 +6,6 @@
   const $ = (selector) => document.querySelector(selector);
   const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
-  let state = normalizeState(loadState());
-  let editingId = null;
-  let toastTimer = null;
-
   const defaultExpenseCategories = [
     ['Dinner', '🍽️', 0],
     ['Groceries', '🛒', 0],
@@ -33,6 +29,10 @@
     ['Investment', '📈', 0],
     ['Other income', '💰', 0],
   ];
+
+  let state = normalizeState(loadState());
+  let editingId = null;
+  let toastTimer = null;
 
   document.addEventListener('DOMContentLoaded', init);
 
