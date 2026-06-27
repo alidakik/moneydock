@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#111827" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="MoneyDock" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="description" content="A private, offline-first personal finance tracker." />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <title>MoneyDock</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="appShell">
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">Private finance tracker</p>
+        <h1>MoneyDock</h1>
+      </div>
+      <button id="quickBackupBtn" class="ghost-btn" type="button" title="Download backup">Backup</button>
+    </header>
+
+    <main>
+      <section id="setupCard" class="card setup-card hidden">
+        <div class="section-title-row">
+          <div>
+            <p class="eyebrow">First setup</p>
+            <h2>Enter your current money</h2>
+          </div>
+        </div>
+        <p class="muted">This creates your first account. You can add more accounts later.</p>
+        <form id="setupForm" class="stacked-form">
+          <label>
+            App currency
+            <select id="setupCurrency">
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+              <option value="LBP">LBP</option>
+              <option value="AED">AED</option>
+              <option value="SAR">SAR</option>
+              <option value="CAD">CAD</option>
+              <option value="AUD">AUD</option>
+            </select>
+          </label>
+          <label>
+            Account name
+            <input id="setupAccountName" type="text" value="Main" autocomplete="off" />
+          </label>
+          <label>
+            Current balance
+            <input id="setupBalance" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00" required />
+          </label>
+          <button class="primary-btn" type="submit">Start tracking</button>
+        </form>
+      </section>
+
+      <section id="homeView" class="view active" aria-labelledby="homeTab">
+        <div class="hero-grid">
+          <article class="balance-card">
+            <p class="eyebrow">Current balance</p>
+            <h2 id="currentBalance">$0.00</h2>
+            <p id="balanceSubtext" class="muted">Across all accounts</p>
+            <div class="hero-actions">
+              <button class="primary-btn" type="button" data-nav="add">Add ticket</button>
+              <button class="secondary-btn" type="button" data-nav="transactions">View tickets</button>
+            </div>
+          </article>
+          <article class="metric-card">
+            <p class="eyebrow">This month</p>
+            <div class="metric-row">
+              <span>Income</span><strong id="monthIncome">$0.00</strong>
+            </div>
+            <div class="metric-row">
+              <span>Spent</span><strong id="monthExpense">$0.00</strong>
+            </div>
+            <div class="metric-row emphasis">
+              <span>Net</span><strong id="monthNet">$0.00</strong>
+            </div>
+          </article>
+          <article class="metric-card">
+            <p class="eyebrow">Pace</p>
+            <div class="metric-row">
+              <span>Avg. daily spend</span><strong id="dailySpend">$0.00</strong>
+            </div>
+            <div class="metric-row">
+              <span>Projected month spend</span><strong id="projectedSpend">$0.00</strong>
+            </div>
+            <div class="metric-row emphasis">
+              <span>Savings rate</span><strong id="savingsRate">0%</strong>
+            </div>
+          </article>
+        </div>
+
+        <section class="card">
+          <div class="section-title-row">
+            <div>
+              <p class="eyebrow">Insights</p>
+              <h2>What needs attention</h2>
+            </div>
+          </div>
+          <div id="insightsList" class="insights-list"></div>
+        </section>
+
+        <section class="charts-grid">
+          <article class="card chart-card">
+            <div class="section-title-row">
+              <div>
+                <p class="eyebrow">Last 30 days</p>
+                <h2>Spending by category</h2>
+              </div>
+            </div>
+            <div id="categoryChart" class="chart"></div>
+          </article>
+
+          <article class="card chart-card">
+            <div class="section-title-row">
+              <div>
+                <p class="eyebrow">Last 45 days</p>
+                <h2>Balance trend</h2>
+              </div>
+            </div>
+            <div id="balanceChart" class="chart"></div>
+          </article>
+
+          <article class="card chart-card">
+            <div class="section-title-row">
+              <div>
+                <p class="eyebrow">Last 6 months</p>
+                <h2>Income vs spending</h2>
+              </div>
+            </div>
+            <div id="cashflowChart" class="chart"></div>
+          </article>
+
+          <article class="card chart-card">
+            <div class="section-title-row">
+              <div>
+                <p class="eyebrow">This month</p>
+                <h2>Budget progress</h2>
+              </div>
+            </div>
+            <div id="budgetChart" class="budget-list"></div>
+          </article>
+        </section>
+
+        <section class="card">
+          <div class="section-title-row">
+            <div>
+              <p class="eyebrow">Recent</p>
+              <h2>Latest tickets</h2>
+            </div>
+          </div>
+          <div id="recentTickets" class="ticket-list compact"></div>
+        </section>
+      </section>
+
+      <section id="addView" class="view" aria-labelledby="addTab">
+        <section class="card">
+          <div class="section-title-row">
+            <div>
+              <p class="eyebrow">Ticket</p>
+              <h2 id="ticketFormTitle">Add money movement</h2>
+            </div>
+            <button id="cancelEditBtn" class="ghost-btn hidden" type="button">Cancel edit</button>
+          </div>
+          <form id="ticketForm" class="stacked-form">
+            <label>
+              Type
+              <select id="ticketType" required>
+                <option value="expense">Expense — remove money</option>
+                <option value="income">Income — add money</option>
+                <option value="transfer">Transfer — move between accounts</option>
+              </select>
+            </label>
+
+            <div id="singleAccountField">
+              <label>
+                Account
+                <select id="ticketAccount"></select>
+              </label>
+            </div>
+
+            <div id="transferAccountFields" class="two-col hidden">
+              <label>
+                From account
+                <select id="transferFrom"></select>
+              </label>
+              <label>
+                To account
+                <select id="transferTo"></select>
+              </label>
+            </div>
+
+            <div class="two-col">
+              <label>
+                Amount
+                <input id="ticketAmount" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00" required />
+              </label>
+              <label>
+                Date
+                <input id="ticketDate" type="date" required />
+              </label>
+            </div>
+
+            <label id="categoryField">
+              Category
+              <select id="ticketCategory"></select>
+            </label>
+
+            <label>
+              Note / merchant / reason
+              <input id="ticketNote" type="text" maxlength="120" placeholder="Dinner, taxi, salary, rent..." autocomplete="off" />
+            </label>
+
+            <label>
+              Repeat automatically
+              <select id="ticketRepeat">
+                <option value="none">No repeat</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </label>
+
+            <button id="saveTicketBtn" class="primary-btn" type="submit">Save ticket</button>
+          </form>
+        </section>
+
+        <section class="card">
+          <div class="section-title-row">
+            <div>
+              <p class="eyebrow">Recurring</p>
+              <h2>Automatic tickets</h2>
+            </div>
+          </div>
+          <p class="muted">Recurring tickets are added when you open the app and the due date has passed.</p>
+          <div id="recurringList" class="ticket-list compact"></div>
+        </section>
+      </section>
+
+      <section id="transactionsView" class="view" aria-labelledby="transactionsTab">
+        <section class="card">
+          <div class="section-title-row">
+            <div>
+              <p class="eyebrow">Tickets</p>
+              <h2>Search and manage</h2>
+            </div>
+            <button id="exportCsvBtn" class="ghost-btn" type="button">CSV</button>
+          </div>
+
+          <div class="filters-grid">
+            <label>
+              Month
+              <input id="filterMonth" type="month" />
+            </label>
+            <label>
+              Type
+              <select id="filterType">
+                <option value="all">All</option>
+                <option value="expense">Expenses</option>
+                <option value="income">Income</option>
+                <option value="transfer">Transfers</option>
+              </select>
+            </label>
+            <label>
+              Category
+              <select id="filterCategory">
+                <option value="all">All</option>
+              </select>
+            </label>
+            <label>
+              Search
+              <input id="filterSearch" type="search" placeholder="note, category, account..." />
+            </label>
+          </div>
+
+          <div id="ticketsSummary" class="pill-row"></div>
+          <div id="ticketList" class="ticket-list"></div>
+        </section>
+      </section>
+
+      <section id="categoriesView" class="view" aria-labelledby="categoriesTab">
+        <section class="card">
+          <div class="section-title-row">
+            <div>
+              <p class="eyebrow">Categories</p>
+              <h2>Define your own categories</h2>
+            </div>
+          </div>
+          <form id="categoryForm" class="stacked-form">
+            <div class="two-col">
+              <label>
+                Name
+                <input id="categoryName" type="text" maxlength="40" placeholder="Dinner" required />
+              </label>
+              <label>
+                Emoji
+                <input id="categoryEmoji" type="text" maxlength="4" placeholder="🍽️" />
+              </label>
+            </div>
+            <div class="two-col">
+              <label>
+                Type
+                <select id="categoryType" required>
+                  <option value="expense">Expense</option>
+                  <option value="income">Income</option>
+                </select>
+              </label>
+              <label>
+                Monthly budget (optional)
+                <input id="categoryBudget" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00" />
+              </label>
+            </div>
+            <button class="primary-btn" type="submit">Add category</button>
+          </form>
+        </section>
+
+        <section class="card">
+          <div class="section-title-row">
+            <div>
+              <p class="eyebrow">Expense</p>
+              <h2>Spending categories</h2>
+            </div>
+          </div>
+          <div id="expenseCategories" class="category-grid"></div>
+        </section>
+
+        <section class="card">
+          <div class="section-title-row">
+            <div>
+              <p class="eyebrow">Income</p>
+              <h2>Money-in categories</h2>
+            </div>
+          </div>
+          <div id="incomeCategories" class="category-grid"></div>
+        </section>
+      </section>
+
+      <section id="settingsView" class="view" aria-labelledby="settingsTab">
+        <section class="card">
+          <div class="section-title-row">
+            <div>
+              <p class="eyebrow">Accounts</p>
+              <h2>Wallets, banks, cash</h2>
+            </div>
+          </div>
+          <form id="accountForm" class="stacked-form">
+            <div class="two-col">
+              <label>
+                Account name
+                <input id="accountName" type="text" placeholder="Cash, Bank, Wallet" maxlength="40" required />
+              </label>
+              <label>
+                Current starting balance
+                <input id="accountBalance" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00" required />
+              </label>
+            </div>
+            <button class="primary-btn" type="submit">Add account</button>
+          </form>
+          <div id="accountList" class="account-list"></div>
+        </section>
+
+        <section class="card">
+          <div class="section-title-row">
+            <div>
+              <p class="eyebrow">Preferences</p>
+              <h2>Currency and data</h2>
+            </div>
+          </div>
+          <form id="settingsForm" class="stacked-form">
+            <label>
+              Currency
+              <select id="settingsCurrency">
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+                <option value="LBP">LBP</option>
+                <option value="AED">AED</option>
+                <option value="SAR">SAR</option>
+                <option value="CAD">CAD</option>
+                <option value="AUD">AUD</option>
+              </select>
+            </label>
+            <label>
+              Monthly saving goal
+              <input id="savingGoal" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00" />
+            </label>
+            <button class="primary-btn" type="submit">Save preferences</button>
+          </form>
+        </section>
+
+        <section class="card danger-zone">
+          <div class="section-title-row">
+            <div>
+              <p class="eyebrow">Backup</p>
+              <h2>Export, import, reset</h2>
+            </div>
+          </div>
+          <p class="muted">Your data stays on this device/browser unless you export or sync it yourself. Export backups regularly.</p>
+          <div class="button-row">
+            <button id="exportJsonBtn" class="secondary-btn" type="button">Download JSON backup</button>
+            <label class="file-btn">
+              Import JSON backup
+              <input id="importJsonInput" type="file" accept="application/json,.json" />
+            </label>
+          </div>
+          <button id="resetBtn" class="danger-btn" type="button">Delete all app data</button>
+        </section>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Main navigation">
+      <button id="homeTab" class="active" type="button" data-nav="home">Home</button>
+      <button id="addTab" type="button" data-nav="add">Add</button>
+      <button id="transactionsTab" type="button" data-nav="transactions">Tickets</button>
+      <button id="categoriesTab" type="button" data-nav="categories">Categories</button>
+      <button id="settingsTab" type="button" data-nav="settings">Settings</button>
+    </nav>
+  </div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script src="app.js" defer></script>
+</body>
+</html>
